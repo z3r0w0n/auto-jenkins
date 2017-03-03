@@ -1,0 +1,17 @@
+# Git ignore files
+
+.DS_Store
+
+# Python
+*.pyc
+
+# Terraform files
+*.tfvars
+*.tfstate*
+
+# Ansible files
+*.retry
+
+# User-generated files
+config.yml
+config/hosts

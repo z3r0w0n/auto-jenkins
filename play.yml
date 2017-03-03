@@ -1,0 +1,8 @@
+# Playbook to configure and deploy servers
+
+- hosts:
+  - wservers
+  become: yes
+  become_method: sudo
+  roles:
+    - web-config

@@ -1,0 +1,6 @@
+
+- name: start apache
+  command: /usr/sbin/apachectl start
+
+- name: reload apache
+  command: /usr/sbin/apachectl graceful

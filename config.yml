@@ -1,0 +1,27 @@
+clustername: adobe
+
+# Change this to your pem file and give the key_name
+private_key_path: "/path/to/key_name.pem"
+key_name: "key_name"
+
+# AWS instance
+region: "us-west-2"
+instance_type: "t2.micro"
+jmaster_count: 1
+jslave_count: 1
+wserver_count: 1
+# ami_id: "ami-d2c924b2"
+ssh_user: "centos"
+
+node_server_count: 1
+
+# Directories
+config_dir: "./config/"
+terraform_dir: "./terraform/"
+
+# Files
+tfvar_file_name: "override.tfvars"
+tfstate_file: "terraform.tfstate"
+
+# HTTPS link to the Web Application repo
+webapp_repo: "https://github.com/z3r0w0n/simple-webapp.git"
