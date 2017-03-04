@@ -6,6 +6,13 @@ provider "aws" {
 # Create a VPC to launch our instances into
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
+  
+  tags {
+    Name = "${var.clustername}-vpc"
+    CreatedBy = "Terraform"
+    ClusterName = "${var.clustername}"
+    sshUser = "${var.ssh_user}"
+  }
 }
 
 # Create an internet gateway to give our subnet access to the outside world
@@ -33,6 +40,7 @@ resource "aws_subnet" "jslave" {
   vpc_id                  = "${aws_vpc.default.id}"
   availability_zone       = "${var.azs["slave"]}"
   cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = true
 }
 
 # Create a subnet to launch our webserver instances into

@@ -6,3 +6,10 @@
   become_method: sudo
   roles:
     - web-config
+
+- hosts:
+  - jenkins
+  become: yes
+  become_method: sudo
+  roles:
+    - jenkins-docker
