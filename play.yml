@@ -1,15 +1,22 @@
 # Playbook to configure and deploy servers
 
 - hosts:
+  - jmasters
+  become: yes
+  become_method: sudo
+  roles:
+    - jenkins-docker
+
+- hosts:
+  - jslaves
+  become: yes
+  become_method: sudo
+  roles:
+    - jslaves-config
+
+- hosts:
   - wservers
   become: yes
   become_method: sudo
   roles:
     - web-config
-
-- hosts:
-  - jenkins
-  become: yes
-  become_method: sudo
-  roles:
-    - jenkins-docker

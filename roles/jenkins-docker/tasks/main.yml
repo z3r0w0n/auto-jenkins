@@ -1,17 +1,5 @@
 ---
 
--   name: Install python setup tools
-    yum: name=python-setuptools
-    tags: docker
-
--   name: Install Pypi
-    easy_install: name=pip
-    tags: docker
-
--   name: Install docker-py
-    pip: name=docker-py
-    tags: docker
-
 -   name: Install Docker
     yum: name=docker state=latest
     tags: docker
@@ -19,3 +7,13 @@
 -   name: Make sure Docker is running
     service: name=docker state=running
     tags: docker
+
+- name: Run Jenkins master container
+  docker_container:
+    name: jenkins
+    image: jenkins
+    published_ports:
+      - "8080:8080"
+      - "50000:50000"
+    env:
+      jenkins_home: /var/jslaves-config
