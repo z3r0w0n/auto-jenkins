@@ -3,6 +3,12 @@
 import yaml
 import os
 
+actions = ["up", "down", "config"]
+props = ["wserver", "jenkins", "print"]
+commands = {"wserver": ["start503", "stop503"],
+            "jenkins": ["scaleup", "scaledown"],
+            "print": ["urls", "servers"]}
+
 with open("config.yml", 'r') as yml_config:
     try:
         config = yaml.load(yml_config)

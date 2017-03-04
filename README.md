@@ -1,10 +1,10 @@
 # auto-jenkins
-Simple automation code to deploy a web application on AWS infrastructure
+Simple automation code to deploy Jenkins and a web application on AWS infrastructure
 
 This application deploys the below infrastructure (using Terraform):
  - 1 VPC
- - 1 Subnet
- - 1 Security Group
+ - 3 Subnets
+ - 3 Security Groups
  - 1 Gateway
  - 1 EC2 Instance
 
@@ -32,6 +32,12 @@ Later, it also configures the AWS CentOS instance to deploy the WebApp with Ansi
 
 ##### Usage:
 ```
+
+$ ./rescale.py [up, down, config]
+	            jenkins [scaleup, scaledown] [count]
+	            wserver [start503, stop503]
+	            print [urls, servers]
+
 # Deploy infrastructure, configure and deploy WebApp
 $ ./adobe.py up
 
@@ -41,10 +47,22 @@ $ ./adobe.py down
 # Run only ansible part for configuration management (Runs play.yml)
 $ ./adobe.py config
 
-# Only after running "up" command successfully
-# Enable Maintenance mode
-$ ./adobe.py start503
+# Print public/accessible URLs after a successful deployment
+$ ./adobe.py print urls
 
-# Disable Maintenance mode
-$ ./adobe.py stop503
+# Print Jenkins server IP Addresses
+$ ./adobe.py print servers
+
+# Scaling EC2 instances on demand
+# ScaleUp
+$ ./adobe.py jenkins scaleup [count]
+# ScaleDown
+$ ./adobe.py jenkins scaledown [count]
+
+# Only after running "up" command successfully
+# Enable Maintenance mode on webserver
+$ ./adobe.py wserver start503
+
+# Disable Maintenance mode on webserver
+$ ./adobe.py wserver stop503
 ```

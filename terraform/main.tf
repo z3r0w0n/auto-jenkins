@@ -6,7 +6,7 @@ provider "aws" {
 # Create a VPC to launch our instances into
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
-  
+
   tags {
     Name = "${var.clustername}-vpc"
     CreatedBy = "Terraform"
@@ -54,7 +54,7 @@ resource "aws_subnet" "wserver" {
 # the instances over SSH and HTTP
 resource "aws_security_group" "default" {
   name        = "${var.clustername}-sg"
-  description = "Used in the terraform"
+  description = "Default SG"
   vpc_id      = "${aws_vpc.default.id}"
 
   # SSH access from anywhere
@@ -65,6 +65,46 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # outbound internet access
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags {
+    Name = "${var.clustername}-default-sg"
+    CreatedBy = "Terraform"
+    ClusterName = "${var.clustername}"
+    sshUser = "${var.ssh_user}"
+  }
+}
+
+resource "aws_security_group" "jmasters" {
+  name        = "${var.clustername}-jmasters-sg"
+  description = "SG for Jenkins Masters"
+  vpc_id      = "${aws_vpc.default.id}"
+
+  # Jenkins Dashboard access from anywhere
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags {
+    Name = "${var.clustername}-jmasters-sg"
+    CreatedBy = "Terraform"
+    ClusterName = "${var.clustername}"
+    sshUser = "${var.ssh_user}"
+  }
+}
+
+resource "aws_security_group" "wservers" {
+  name        = "${var.clustername}-wservers-sg"
+  description = "SG for Web Servers"
+  vpc_id      = "${aws_vpc.default.id}"
+
   # HTTP access from the VPC
   ingress {
     from_port   = 80
@@ -72,13 +112,11 @@ resource "aws_security_group" "default" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  # outbound internet access
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+  tags {
+    Name = "${var.clustername}-wservers-sg"
+    CreatedBy = "Terraform"
+    ClusterName = "${var.clustername}"
+    sshUser = "${var.ssh_user}"
   }
 }
 
@@ -94,7 +132,7 @@ resource "aws_instance" "jmaster" {
   key_name = "${var.key_name}"
 
   # Our Security group to allow HTTP and SSH access
-  vpc_security_group_ids = ["${aws_security_group.default.id}"]
+  vpc_security_group_ids = ["${aws_security_group.default.id}", "${aws_security_group.jmasters.id}"]
 
   # Subnet ID
   subnet_id = "${aws_subnet.jmaster.id}"
@@ -143,7 +181,7 @@ resource "aws_instance" "wserver" {
   key_name = "${var.key_name}"
 
   # Our Security group to allow HTTP and SSH access
-  vpc_security_group_ids = ["${aws_security_group.default.id}"]
+  vpc_security_group_ids = ["${aws_security_group.default.id}", "${aws_security_group.wservers.id}"]
 
   # Subnet ID
   subnet_id = "${aws_subnet.wserver.id}"

@@ -8,13 +8,53 @@ import json
 import variables as vars
 import common
 
-def print_url():
-    public_ip = common.get_publicip()
-    if public_ip:
-        print("WebApp URL: http://"+public_ip)
+def print_urls():
+    wserver_ip = common.get_ip("wserver")
+    master_ips = common.get_ip("master")
+
+    if wserver_ip:
+        print("WebApp URL: http://"+wserver_ip)
+
+    if master_ips:
+        print("Jenkins Dashboard: http://"+master_ips[0]+":8080\n")
+
+    print_servers()
+
+def print_servers():
+    master_ips = common.get_ip("master")
+    slave_ips = common.get_ip("slave")
+    if master_ips:
+        print("Jenkins Servers:")
+        print("Masters:")
+        print(master_ips)
+    if slave_ips:
+        print("Slaves:")
+        print(slave_ips)
 
 def print_usage():
-    print("Usage: ./rescale.py [up, down, config, start503, stop503]")
+    print("Usage: ./rescale.py [up, down, config]\n\t\
+            jenkins [scaleup, scaledown] [count]\n\t\
+            wserver [start503, stop503]\n\t\
+            print [urls, servers]")
+
+def check_command():
+    clen = len(sys.argv)
+    if clen > 1 and clen < 5:
+        prop = sys.argv[1]
+        if prop in vars.actions or prop in vars.props:
+            if clen == 2 and prop in vars.actions:
+                return
+            elif clen == 3:
+                if prop in ["wserver"] and sys.argv[2] in ["start503", "stop503"]:
+                    return
+                if prop in ["print"] and sys.argv[2] in ["urls", "servers"]:
+                    return
+            elif clen == 4:
+                if prop in ["jenkins"] and sys.argv[2] in ["scaleup", "scaledown"]:
+                    return
+    print_usage()
+    sys.exit(1)
+
 
 def gen_tfvars(var_file):
     try:
@@ -44,7 +84,7 @@ def run_ansible(config_dir, mflag=0, tags=""):
     ansible_inventory = os.path.join(config_dir, 'hosts')
 
     extra_vars = {}
-    public_ip = common.get_publicip()
+    public_ip = common.get_ip("wserver")
     extra_vars['public_ip'] = public_ip
     extra_vars['public_ip_httpd'] = public_ip.replace('.','\.' )
     extra_vars['mflag'] = mflag
@@ -76,11 +116,10 @@ def run_terraform(action, terraform_dir):
     return True
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print_usage()
-        sys.exit(1)
+    # Validate command usage
+    check_command()
 
-    action = sys.argv[1]
+    prop = sys.argv[1]
 
     config_dir = vars.config_dir
     terraform_dir = vars.terraform_dir
@@ -89,20 +128,44 @@ if __name__ == "__main__":
     state_file = vars.state_file
     out_state_file = vars.out_state_file
 
-    if action == "up":
+    if prop == "up":
         if run_terraform("up", terraform_dir):
             if run_ansible(config_dir):
-                print("Webapp deployed successfully ###################################")
-                print_url()
+                print("Hosts configured successfully ###################################")
+                print_urls()
 
-    if action == "down":
+    if prop == "down":
         run_terraform("down", terraform_dir)
 
-    if action == "config":
+    if prop == "config":
         run_ansible(config_dir)
 
-    if action == "start503":
-        run_ansible(config_dir, mflag=1, tags="maintenance")
+    if prop in vars.props:
+        action = sys.argv[2]
+        if prop == "wserver":
+            if action == "start503":
+                run_ansible(config_dir, mflag=1, tags="maintenance")
+            if action == "stop503":
+                run_ansible(config_dir, mflag=0, tags="maintenance")
+        if prop == "print":
+            if action == "urls":
+                print_urls()
+            if action == "servers":
+                print_servers()
+        if prop == "jenkins":
+            try:
+                count = int(sys.argv[3])
+                if action == "scaleup":
+                    cmd = "up"
+                if action == "scaledown":
+                    cmd = "down"
 
-    if action == "stop503":
-        run_ansible(config_dir, mflag=0, tags="maintenance")
+                if common.scale_slaves_config(cmd, count):
+                    if run_terraform("up", terraform_dir):
+                        if run_ansible(config_dir):
+                            print("Hosts configured successfully ###################################")
+                            print_urls()
+
+            except ValueError:
+                print("ERROR: Please provide an Integer for count")
+                print_usage()
