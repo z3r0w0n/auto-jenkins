@@ -6,7 +6,7 @@ This application deploys the below infrastructure (using Terraform):
  - 3 Subnets
  - 3 Security Groups
  - 1 Gateway
- - 1 EC2 Instance
+ - 3 EC2 Instances
 
 Later, it also configures the AWS CentOS instance to deploy the WebApp with Ansible
 
